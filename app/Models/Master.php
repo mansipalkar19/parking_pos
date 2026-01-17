@@ -10,10 +10,9 @@ class Master extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    protected $table = 'roles'; 
+    protected $table = 'roles';
 
     protected $fillable = [
         'name',
     ];
 }
-

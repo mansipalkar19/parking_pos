@@ -94,6 +94,13 @@ class AuthController extends Controller
             ], 404);
         }
 
+        if ($user->accept_request != 1) {
+            return response()->json([
+                'ack' => 'error',
+                'message' => 'User request not accepted yet'
+            ], 403);
+        }
+
         if ($user->password !== md5($request->password)) {
             return response()->json([
                 'ack' => 'error',

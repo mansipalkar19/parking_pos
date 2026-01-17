@@ -21,6 +21,7 @@ class User extends Authenticatable
         'place_id',
         'status',
         'api_token',
+        'accept_request',
     ];
 
     protected $hidden = [
