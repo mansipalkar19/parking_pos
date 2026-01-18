@@ -21,69 +21,60 @@ class PlaceController extends Controller
 
     public function store(Request $request)
     {
+        $user = $request->user();
         $validator = Validator::make($request->all(), [
-            'place_name'   => 'required|max:100',
-            'city'         => 'required|max:100',
-            'state'        => 'required|max:100',
-            'country'      => 'required|max:100',
-            'user_id'      => 'required|max:10',
-            'no_of_slots'  => 'required',
-            'operator_id'  => 'required',
-            'vehicle_type' => 'required|array',
-            'status'       => 'required|in:0,1',
+            'place_name'             => 'required|max:100',
+            'address'                => 'required|max:255',
+            'no_of_slots'             => 'required|integer|min:1',
+            'allowed_vehicle_types'   => 'required|array|min:1',
+            'parking_place_status'    => 'required|in:active,inactive',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
-                'ack' => 'error',
-                'message' => $validator->errors()->first()
+                'ack'     => 'error',
+                'message' => $validator->errors()->first(),
             ], 422);
         }
 
+        $status = $request->parking_place_status === 'active' ? 1 : 0;
+
         $exists = Place::where('place_name', $request->place_name)
-            ->where('city', $request->city)
             ->exists();
 
         if ($exists) {
             return response()->json([
-                'ack' => 'error',
-                'message' => 'Place already exists'
+                'ack'     => 'error',
+                'message' => 'Place already exists',
             ], 409);
         }
 
         $place = Place::create([
             'place_name'   => $request->place_name,
-            'city'         => $request->city,
-            'state'        => $request->state,
-            'country'      => $request->country,
+            'address'      => $request->address,
             'no_of_slots'  => $request->no_of_slots,
-            'vehicle_type' => $request->vehicle_type,
-            'status'       => $request->status,
-            'created_by'   => $request->operator_id,
-            'updated_by'   => $request->operator_id,
+            'vehicle_type' => $request->allowed_vehicle_types,
+            'created_by'   => $user->id,
+            'updated_by'   => $user->id,
+            'status'       => $status,
         ]);
 
         return response()->json([
-            'ack' => 'success',
+            'ack'     => 'success',
             'message' => 'Place created successfully',
-            'data' => [
-                'id'           => $place->id,
-                'place_name'   => $place->place_name,
-                'city'         => $place->city,
-                'state'        => $place->state,
-                'country'      => $place->country,
-                'no_of_slots'  => $place->no_of_slots,
-                'vehicle_type' => $place->vehicle_type,
-                'status'       => $place->status,
-                'created_at'   => Carbon::parse($place->created_at)
-                    ->timezone('Asia/Kolkata')
-                    ->format('d-m-Y H:i:s'),
-                'updated_at'   => Carbon::parse($place->updated_at)
-                    ->timezone('Asia/Kolkata')
-                    ->format('d-m-Y H:i:s'),
+            'data'    => [
+                'id'                     => $place->id,
+                'place_name'             => $place->place_name,
+                'address'                => $place->address,
+                'no_of_slots'             => $place->no_of_slots,
+                'allowed_vehicle_types'   => $place->vehicle_type,
+                'parking_place_status'    => $place->status ? 'active' : 'inactive',
+                'created_at'              => $place->created_at->toISOString(),
+                'updated_at'              => $place->updated_at->toISOString(),
             ]
         ], 201);
     }
+
 
 
     public function listPlacess()
@@ -108,7 +99,8 @@ class PlaceController extends Controller
     //Show single place
     public function show($id)
     {
-        $place = Place::find($id);
+
+        $place = Place::with(['creator', 'updater'])->find($id);
 
         if (!$place) {
             return response()->json([
@@ -118,13 +110,29 @@ class PlaceController extends Controller
         }
 
         return response()->json([
-            'status' => 'success',
-            'data' => $place
-        ]);
+            'ack' => 'success',
+            'data' => [
+                'id'                     => $place->id,
+                'place_name'             => $place->place_name,
+                'address'                => $place->address,
+                'no_of_slots'             => $place->no_of_slots,
+                'allowed_vehicle_types'   => $place->vehicle_type,
+                'parking_place_status'    => $place->status ? 'active' : 'inactive',
+                // 'created_by'              => $place->created_by,
+                // 'updated_by'              => $place->updated_by,
+                'created_by' => optional($place->creator)->id,
+
+                'updated_by' => optional($place->updater)->id,
+                'created_at' => $place->created_at->toISOString(),
+                'updated_at' => $place->updated_at->toISOString(),
+            ]
+        ], 200);
     }
 
     public function update(Request $request, $id)
     {
+        //print_r($request);
+        $user = $request->user();
         $place = Place::find($id);
 
         if (!$place) {
@@ -136,13 +144,10 @@ class PlaceController extends Controller
 
         $validator = Validator::make($request->all(), [
             'place_name'   => 'required|max:100',
-            'city'         => 'required|max:100',
-            'state'        => 'required|max:100',
-            'country'      => 'required|max:100',
+            'address'      => 'required|max:100',
             'no_of_slots'  => 'required|integer',
-            'operator_id'  => 'required',
-            'vehicle_type' => 'required|array',
-            'status'       => 'required|in:0,1',
+            'allowed_vehicle_types'   => 'required|array|min:1',
+            'parking_place_status'    => 'required|in:active,inactive',
         ]);
 
         if ($validator->fails()) {
@@ -152,9 +157,10 @@ class PlaceController extends Controller
             ], 422);
         }
 
+        $status = $request->parking_place_status === 'active' ? 1 : 0;
+
         // Duplicate check
         $exists = Place::where('place_name', $request->place_name)
-            ->where('city', $request->city)
             ->where('id', '!=', $id)
             ->exists();
 
@@ -167,13 +173,11 @@ class PlaceController extends Controller
 
         $place->update([
             'place_name'   => $request->place_name,
-            'city'         => $request->city,
-            'state'        => $request->state,
-            'country'      => $request->country,
+            'address'      => $request->address,
             'no_of_slots'  => $request->no_of_slots,
-            'vehicle_type' => $request->vehicle_type,
-            'status'       => $request->status,
-            'updated_by'   => $request->operator_id,
+            'vehicle_type' => $request->allowed_vehicle_types,
+            'status'       => $status,
+            'updated_by'   => $user->id,
         ]);
 
         return response()->json([
@@ -182,18 +186,53 @@ class PlaceController extends Controller
             'data' => [
                 'id'           => $place->id,
                 'place_name'   => $place->place_name,
-                'city'         => $place->city,
-                'state'        => $place->state,
-                'country'      => $place->country,
+                'address'         => $place->address,
                 'no_of_slots'  => $place->no_of_slots,
-                'vehicle_type' => $place->vehicle_type,
-                'status'       => $place->status,
-                'updated_at'   => Carbon::parse($place->updated_at)
-                    ->timezone('Asia/Kolkata')
-                    ->format('d-m-Y H:i:s'),
+                'allowed_vehicle_types'   => $place->vehicle_type,
+                'parking_place_status'    => $place->status ? 'active' : 'inactive',
+                'updated_at'   => Carbon::parse($place->updated_at)->toISOString(),
             ]
         ], 200);
     }
+
+
+    public function GetAllPlacess()
+    {
+        $places = Place::with(['creator', 'updater'])->get();
+
+        if ($places->isEmpty()) {
+            return response()->json([
+                'ack' => 'error',
+                'message' => 'No places found'
+            ], 404);
+        }
+
+        return response()->json([
+            'ack' => 'success',
+            'data' => $places->map(function ($place) {
+                return [
+                    'id'                     => $place->id,
+                    'place_name'             => $place->place_name,
+                    'address'                => $place->address,
+                    'no_of_slots'             => $place->no_of_slots,
+                    'allowed_vehicle_types'   => $place->vehicle_type,
+                    'parking_place_status'    => $place->status ? 'active' : 'inactive',
+
+                    // 👇 return USER NAMES (recommended)
+                    'created_by' => optional($place->creator)->name,
+                    'updated_by' => optional($place->updater)->name,
+
+                    // if you want IDs instead, use:
+                    // 'created_by' => optional($place->creator)->id,
+                    // 'updated_by' => optional($place->updater)->id,
+
+                    'created_at' => optional($place->created_at)->toISOString(),
+                    'updated_at' => optional($place->updated_at)->toISOString(),
+                ];
+            })
+        ], 200);
+    }
+
 
 
 
@@ -209,7 +248,8 @@ class PlaceController extends Controller
             ], 404);
         }
 
-        $place->delete();
+        $place->status = 0;
+        $place->save();
 
         return response()->json([
             'status' => 'success',

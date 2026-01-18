@@ -16,23 +16,27 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+        $authUser = $request->user();
         try {
             $request->validate([
                 'name'        => 'required',
-                'password'    => 'required|min:6|confirmed',
+                'password'    => 'required|min:6',
                 'email'       => 'nullable|email|unique:users,email',
                 'mobile'      => 'nullable',
-                'role'        => 'required',
                 'fk_place_id' => 'required|exists:places,id',
+                'operator_status'    => 'required|in:active,inactive',
             ]);
+
+            $status = $request->operator_status === 'active' ? 1 : 0;
 
             $user = User::create([
                 'name'      => $request->name,
                 'mobile'    => $request->mobile,
                 'email'     => $request->email,
                 'password'  => md5($request->password),
-                'role'      => $request->role,
-                'status'    => 1,
+                'role'      => 2,
+                'notes'      => $request->notes,
+                'status'    => $status,
                 'place_id'  => $request->fk_place_id,
                 'api_token' => Str::random(60)
             ]);
@@ -45,12 +49,11 @@ class AuthController extends Controller
             }
 
             VendorMapping::create([
-                'fk_vendor_id' => $user->id,
                 'fk_place_id'  => $request->fk_place_id,
-                'operator_id'  => $request->operator_id,
-                'status'       => 1,
-                'created_by'   => $request->operator_id,
-                'updated_by'   => $request->operator_id,
+                'operator_id'  => $user->id,
+                'status'       => $status,
+                'created_by'   => $authUser->id,
+                'updated_by'   => $authUser->id,
             ]);
 
             return response()->json([
@@ -58,7 +61,17 @@ class AuthController extends Controller
                 'message'    => 'User registered successfully',
                 'token_type' => 'Bearer',
                 'token'      => $user->api_token,
-                'user'       => $user
+                'user'       => [
+                    'id'         => $user->id,
+                    'name'       => $user->name,
+                    'mobile'     => $user->mobile,
+                    'email'      => $user->email,
+                    //'role'       => $user->role,
+                    'status'     => $user->status ? 'active' : 'inactive', // ✅ map here
+                    'place_id'   => $user->place_id,
+                    'created_at' => $user->created_at->toISOString(),
+                    'updated_at' => $user->updated_at->toISOString(),
+                ]
             ]);
         } catch (ValidationException $e) {
             return response()->json([
@@ -123,17 +136,17 @@ class AuthController extends Controller
                 'name'      => $user->name,
                 'mobile'    => $user->mobile,
                 'email'     => $user->email,
-                'role'      => $user->role,
+                //'role'      => $user->role,
                 'role_id'   => $role ? $role->id : null,
-                'vendor_id' => $user->vendor_id,
-                'place_id'  => $user->place_id,
+                ////'vendor_id' => $user->vendor_id,
+                //'place_id'  => $user->place_id,
                 'status'    => $user->status,
-                'created_at' => $user->created_at
-                    ->timezone('Asia/Kolkata')
-                    ->format('Y-m-d H:i:s'),
+                'created_at' => $user->created_at,
+                // ->timezone('Asia/Kolkata')
+                // ->format('Y-m-d H:i:s'),
                 'updated_at' => $user->updated_at
-                    ->timezone('Asia/Kolkata')
-                    ->format('Y-m-d H:i:s'),
+                // ->timezone('Asia/Kolkata')
+                // ->format('Y-m-d H:i:s'),
             ]
         ]);
     }

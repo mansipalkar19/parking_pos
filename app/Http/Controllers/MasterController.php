@@ -101,19 +101,33 @@ class MasterController extends Controller
     public function listPlacess()
     {
         return DataTables::eloquent(
-            Place::where('status', 0)
+            Place::where('status', 1)
         )
-            ->editColumn('created_at', function ($row) {
-                return $row->created_at
-                    ->timezone('Asia/Kolkata')
-                    ->format('Y-m-d H:i:s');
+            ->addColumn('vehicle_types', function ($place) {
+
+                if (empty($place->vehicle_type)) {
+                    return '-';
+                }
+
+                $ids = is_array($place->vehicle_type)
+                    ? $place->vehicle_type
+                    : json_decode($place->vehicle_type, true);
+
+                return Vehicle::whereIn('id', $ids)
+                    ->pluck('vehicle_type_name')
+                    ->implode(', ');
             })
-            ->editColumn('updated_at', function ($row) {
-                return $row->updated_at
-                    ->timezone('Asia/Kolkata')
-                    ->format('Y-m-d H:i:s');
-            })
-            ->toJson();
+            ->editColumn(
+                'created_at',
+                fn($row) =>
+                $row->created_at->timezone('Asia/Kolkata')->format('Y-m-d H:i:s')
+            )
+            ->editColumn(
+                'updated_at',
+                fn($row) =>
+                $row->updated_at->timezone('Asia/Kolkata')->format('Y-m-d H:i:s')
+            )
+            ->make(true);
     }
     //Store new place
 
@@ -226,7 +240,7 @@ class MasterController extends Controller
             ], 404);
         }
 
-        $place->status = 1;
+        $place->status = 0;
         $place->save();
 
         return response()->json([
@@ -242,14 +256,10 @@ class MasterController extends Controller
             Vehicle::where('status', 1)
         )
             ->editColumn('created_at', function ($row) {
-                return $row->created_at
-                    ->timezone('Asia/Kolkata')
-                    ->format('Y-m-d H:i:s');
+                return Carbon::parse($row->created_at)->toISOString();
             })
             ->editColumn('updated_at', function ($row) {
-                return $row->updated_at
-                    ->timezone('Asia/Kolkata')
-                    ->format('Y-m-d H:i:s');
+                return Carbon::parse($row->updated_at)->toISOString();
             })
             ->toJson();
     }

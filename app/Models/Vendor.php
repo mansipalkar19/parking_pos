@@ -18,4 +18,9 @@ class Vendor extends Model
         'status',
         'accept_request',
     ];
+
+    public function place()
+    {
+        return $this->belongsTo(Place::class, 'place_id');
+    }
 }

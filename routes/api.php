@@ -7,7 +7,6 @@ use App\Http\Controllers\PlaceController;
 use App\Http\Controllers\VendorController;
 use App\Models\Vehicle;
 
-Route::post('/create-operators', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/listRoles', [MasterController::class, 'listRoles']);
@@ -37,14 +36,21 @@ Route::middleware(['apiauth'])->group(function () {
     Route::post('/updateParkingRates/{id}', [MasterController::class, 'updateParkingRates']);
     Route::post('/destroyParkingRates/{id}/destroyParkingRates', [MasterController::class, 'destroyParkingRates']);
 
+    //Operators
+    Route::post('/create-operators', [AuthController::class, 'register']);
+    Route::get('/create-operators', [VendorController::class, 'GetAllVendors']);
+    Route::post('/create-operators/{id}', [VendorController::class, 'updateOperator']);
 
     // Places
     Route::get('/places', [PlaceController::class, 'index']);
-    Route::post('/places', [PlaceController::class, 'store']);
-    Route::get('/places/{id}', [PlaceController::class, 'show']);
-    Route::put('/places/{id}', [PlaceController::class, 'update']);
+    Route::post('/parking-places', [PlaceController::class, 'store']);
+    Route::get('/parking-places/{id}', [PlaceController::class, 'show']);
+    Route::put('/parking-places/{id}', [PlaceController::class, 'update']);
+    Route::get('/parking-places', [PlaceController::class, 'GetAllPlacess']);
     Route::delete('/places/{id}', [PlaceController::class, 'destroy']);
 });
+
+Route::get('/places-list/{id}', [PlaceController::class, 'show']);
 
 
 Route::prefix('vendor')->group(function () {
