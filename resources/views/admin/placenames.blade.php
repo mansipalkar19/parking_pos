@@ -420,6 +420,9 @@
                                     @csrf
 
                                     <div class="card-body">
+                                        <input type="hidden" name="user_id" value="{{ auth()->id() ?? 1 }}">
+                                        <input type="hidden" name="operator_id" value="{{ auth()->id() ?? 1 }}">
+                                        <input type="hidden" name="status" value="1">
                                         <!-- Place Name -->
                                         <div class="mb-3">
                                             <label class="form-label fw-semibold">Place Name</label>
@@ -432,41 +435,48 @@
                                                 maxlength="100" />
                                         </div>
 
-                                        <!-- City -->
                                         <div class="mb-3">
-                                            <label class="form-label fw-semibold">City</label>
-                                            <input
-                                                type="text"
-                                                name="city"
-                                                class="form-control no-focus"
-                                                placeholder="Enter city"
-                                                required
-                                                maxlength="100" />
+                                            <label class="form-label fw-semibold">Address</label>
+                                            <textarea
+                                                name="address"
+                                                class="form-control"
+                                                rows="3"
+                                                placeholder="Enter full address"
+                                                required></textarea>
                                         </div>
 
-                                        <!-- State -->
+                                        <!-- No of Slots -->
                                         <div class="mb-3">
-                                            <label class="form-label fw-semibold">State</label>
+                                            <label class="form-label fw-semibold">No of Slots</label>
                                             <input
-                                                type="text"
-                                                name="state"
-                                                class="form-control no-focus"
-                                                placeholder="Enter state"
+                                                type="number"
+                                                name="no_of_slots"
+                                                class="form-control"
+                                                placeholder="Enter number of slots"
                                                 required
-                                                maxlength="100" />
+                                                min="1">
                                         </div>
 
-                                        <!-- Country -->
+
                                         <div class="mb-3">
-                                            <label class="form-label fw-semibold">Country</label>
-                                            <input
-                                                type="text"
-                                                name="country"
-                                                class="form-control no-focus"
-                                                placeholder="Enter country"
-                                                required
-                                                maxlength="100" />
+                                            <label class="form-label fw-semibold">Vehicle Type</label>
+
+                                            @foreach($vehicleTypes as $type)
+                                            <div class="form-check">
+                                                <input
+                                                    class="form-check-input"
+                                                    type="checkbox"
+                                                    name="vehicle_type[]"
+                                                    value="{{ $type->id }}"
+                                                    id="vehicle_{{ $type->id }}">
+                                                <label class="form-check-label" for="vehicle_{{ $type->id }}">
+                                                    {{ $type->vehicle_type_name }}
+                                                </label>
+                                            </div>
+                                            @endforeach
                                         </div>
+
+
 
                                         <!-- Buttons -->
                                         <div class="d-flex gap-2">
@@ -497,9 +507,8 @@
                                                 <tr>
                                                     <th>ID</th>
                                                     <th>Place Name</th>
-                                                    <th>City</th>
-                                                    <th>State</th>
-                                                    <th>Country</th>
+                                                    <th>Address</th>
+                                                    <th>No of Slots</th>
                                                     <th>Created</th>
                                                     <th>Updated</th>
                                                     <th>Action</th>
@@ -508,40 +517,13 @@
                                         </table>
                                     </div>
                                 </div>
-                                <!-- <div class="modal fade" id="editRoleModal" tabindex="-1">
-                                    <div class="modal-dialog modal-sm modal-dialog-centered">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Edit Role</h5>
-                                                <button class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
 
-                                            <form id="editPlaceForm">
-                                                @csrf
-                                                <input type="hidden" id="edit_place_id">
 
-                                                <label class="form-label fw-semibold">Place Name</label>
-                                                <input type="text" id="edit_place_name" class="form-control no-focus" required>
-
-                                                <label class="form-label fw-semibold">City</label>
-                                                <input type="text" id="edit_city" class="form-control no-focus" required>
-
-                                                <label class="form-label fw-semibold">State</label>
-                                                <input type="text" id="edit_state" class="form-control no-focus" required>
-
-                                                <label class="form-label fw-semibold">Country</label>
-                                                <input type="text" id="edit_country" class="form-control no-focus" required>
-
-                                                <button class="btn btn-success mt-3">Update</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div> -->
                                 <div class="modal fade" id="editRoleModal" tabindex="-1">
                                     <div class="modal-dialog modal-sm modal-dialog-centered">
                                         <div class="modal-content">
                                             <div class="modal-header">
-                                                <h5 class="modal-title">Edit Role</h5>
+                                                <h5 class="modal-title">Edit Place</h5>
                                                 <button class="btn-close" data-bs-dismiss="modal"></button>
                                             </div>
 
@@ -550,24 +532,42 @@
                                                 <div class="modal-body">
                                                     <input type="hidden" id="edit_place_id">
 
-                                                    <label class="form-label fw-semibold">Place Name</label>
-                                                    <input type="text" id="edit_place_name" class="form-control no-focus" required>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Place Name</label>
+                                                        <input type="text" id="edit_place_name" class="form-control" required>
+                                                    </div>
 
-                                                    <label class="form-label fw-semibold">City</label>
-                                                    <input type="text" id="edit_city" class="form-control no-focus" required>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Address</label>
+                                                        <textarea id="edit_address" class="form-control" rows="3" required></textarea>
+                                                    </div>
 
-                                                    <label class="form-label fw-semibold">State</label>
-                                                    <input type="text" id="edit_state" class="form-control no-focus" required>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">No of Slots</label>
+                                                        <input type="number" id="edit_no_of_slots" class="form-control" min="1" required>
+                                                    </div>
 
-                                                    <label class="form-label fw-semibold">Country</label>
-                                                    <input type="text" id="edit_country" class="form-control no-focus" required>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Vehicle Type</label>
 
+                                                        @foreach($vehicleTypes as $type)
+                                                        <div class="form-check">
+                                                            <input class="form-check-input edit-vehicle"
+                                                                type="checkbox"
+                                                                value="{{ $type->id }}"
+                                                                id="edit_vehicle_{{ $type->id }}">
+                                                            <label class="form-check-label">
+                                                                {{ $type->vehicle_type_name }}
+                                                            </label>
+                                                        </div>
+                                                        @endforeach
+                                                    </div>
                                                 </div>
-
                                                 <div class="modal-footer">
                                                     <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                                                     <button class="btn btn-success">Update</button>
                                                 </div>
+
                                             </form>
                                         </div>
                                     </div>
@@ -880,16 +880,13 @@
                         name: 'place_name'
                     },
                     {
-                        data: 'city',
-                        name: 'city'
+                        data: 'address',
+                        name: 'address'
                     },
                     {
-                        data: 'state',
-                        name: 'state'
-                    },
-                    {
-                        data: 'country',
-                        name: 'country'
+                        data: 'vehicle_types',
+                        name: 'vehicle_types',
+                        orderable: false
                     },
                     {
                         data: 'created_at',
@@ -905,23 +902,17 @@
                         searchable: false,
                         render: function(data) {
                             return `
-                            <button class="btn btn-sm btn-primary editBtn"
-                                data-id="${data.id}"
-                                data-place_name="${data.place_name}"
-                                data-city="${data.city}"
-                                data-state="${data.state}"
-                                data-country="${data.country}">
-                                <i class="fa fa-edit"></i>
-                            </button>
-
-                            <button class="btn btn-sm btn-danger deleteBtn"
-                                data-id="${data.id}">
-                                <i class="fa fa-trash"></i>
-                            </button>
-                        `;
+                <button class="btn btn-sm btn-primary editBtn" data-id="${data.id}">
+                    <i class="fa fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-danger deleteBtn" data-id="${data.id}">
+                    <i class="fa fa-trash"></i>
+                </button>
+            `;
                         }
                     }
                 ]
+
             });
 
         });
@@ -931,15 +922,30 @@
         // Open Edit Modal
         $(document).on('click', '.editBtn', function() {
 
-            $('#edit_place_id').val($(this).data('id'));
-            $('#edit_place_name').val($(this).data('place_name'));
-            $('#edit_city').val($(this).data('city'));
-            $('#edit_state').val($(this).data('state'));
-            $('#edit_country').val($(this).data('country'));
+            let id = $(this).data('id');
 
-            $('#editRoleModal').modal('show');
+            $.get("{{ url('/api/places-list') }}/" + id, function(res) {
+
+                let data = res.data;
+
+                $('#edit_place_id').val(data.id);
+                $('#edit_place_name').val(data.place_name);
+                $('#edit_address').val(data.address);
+                $('#edit_no_of_slots').val(data.no_of_slots);
+
+                // Reset all vehicle checkboxes
+                $('.edit-vehicle').prop('checked', false);
+
+                // vehicle_type is already an array
+                let vehicles = data.vehicle_type;
+
+                vehicles.forEach(function(vId) {
+                    $('#edit_vehicle_' + vId).prop('checked', true);
+                });
+
+                $('#editRoleModal').modal('show');
+            });
         });
-
 
         // Update Role
         $('#editPlaceForm').submit(function(e) {
@@ -947,15 +953,22 @@
 
             let id = $('#edit_place_id').val();
 
+            let vehicleTypes = [];
+            $('.edit-vehicle:checked').each(function() {
+                vehicleTypes.push($(this).val());
+            });
+
             $.ajax({
                 url: "{{ route('placename.update', ':id') }}".replace(':id', id),
-
                 type: 'POST',
                 data: {
+                    _token: "{{ csrf_token() }}",
                     place_name: $('#edit_place_name').val(),
-                    city: $('#edit_city').val(),
-                    state: $('#edit_state').val(),
-                    country: $('#edit_country').val()
+                    address: $('#edit_address').val(),
+                    no_of_slots: $('#edit_no_of_slots').val(),
+                    vehicle_type: vehicleTypes,
+                    operator_id: "{{ auth()->id() ?? 1 }}", // REQUIRED
+                    status: 1
                 },
                 success: function() {
                     $('#editRoleModal').modal('hide');
@@ -966,7 +979,6 @@
                 }
             });
         });
-
 
         // Open Delete Modal
         $(document).on('click', '.deleteBtn', function() {

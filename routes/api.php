@@ -46,6 +46,8 @@ Route::middleware(['apiauth'])->group(function () {
     Route::delete('/places/{id}', [PlaceController::class, 'destroy']);
 });
 
+Route::get('/places-list/{id}', [PlaceController::class, 'show']);
+
 
 Route::prefix('vendor')->group(function () {
     Route::get('/pending', [VendorController::class, 'pending']);

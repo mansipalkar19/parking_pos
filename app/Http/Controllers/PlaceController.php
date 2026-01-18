@@ -23,11 +23,9 @@ class PlaceController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'place_name'   => 'required|max:100',
-            'city'         => 'required|max:100',
-            'state'        => 'required|max:100',
-            'country'      => 'required|max:100',
             'user_id'      => 'required|max:10',
             'no_of_slots'  => 'required',
+            'address'  => 'required',
             'operator_id'  => 'required',
             'vehicle_type' => 'required|array',
             'status'       => 'required|in:0,1',
@@ -41,7 +39,7 @@ class PlaceController extends Controller
         }
 
         $exists = Place::where('place_name', $request->place_name)
-            ->where('city', $request->city)
+            ->where('status', 1)
             ->exists();
 
         if ($exists) {
@@ -53,10 +51,8 @@ class PlaceController extends Controller
 
         $place = Place::create([
             'place_name'   => $request->place_name,
-            'city'         => $request->city,
-            'state'        => $request->state,
-            'country'      => $request->country,
             'no_of_slots'  => $request->no_of_slots,
+            'address'  => $request->address,
             'vehicle_type' => $request->vehicle_type,
             'status'       => $request->status,
             'created_by'   => $request->operator_id,
@@ -69,10 +65,8 @@ class PlaceController extends Controller
             'data' => [
                 'id'           => $place->id,
                 'place_name'   => $place->place_name,
-                'city'         => $place->city,
-                'state'        => $place->state,
-                'country'      => $place->country,
                 'no_of_slots'  => $place->no_of_slots,
+                'address'  => $place->address,
                 'vehicle_type' => $place->vehicle_type,
                 'status'       => $place->status,
                 'created_at'   => Carbon::parse($place->created_at)
@@ -136,9 +130,7 @@ class PlaceController extends Controller
 
         $validator = Validator::make($request->all(), [
             'place_name'   => 'required|max:100',
-            'city'         => 'required|max:100',
-            'state'        => 'required|max:100',
-            'country'      => 'required|max:100',
+            'address'      => 'required|max:100',
             'no_of_slots'  => 'required|integer',
             'operator_id'  => 'required',
             'vehicle_type' => 'required|array',
@@ -154,7 +146,7 @@ class PlaceController extends Controller
 
         // Duplicate check
         $exists = Place::where('place_name', $request->place_name)
-            ->where('city', $request->city)
+            ->where('status', 1)
             ->where('id', '!=', $id)
             ->exists();
 
@@ -167,9 +159,7 @@ class PlaceController extends Controller
 
         $place->update([
             'place_name'   => $request->place_name,
-            'city'         => $request->city,
-            'state'        => $request->state,
-            'country'      => $request->country,
+            'address'      => $request->address,
             'no_of_slots'  => $request->no_of_slots,
             'vehicle_type' => $request->vehicle_type,
             'status'       => $request->status,
@@ -182,9 +172,7 @@ class PlaceController extends Controller
             'data' => [
                 'id'           => $place->id,
                 'place_name'   => $place->place_name,
-                'city'         => $place->city,
-                'state'        => $place->state,
-                'country'      => $place->country,
+                'address'         => $place->address,
                 'no_of_slots'  => $place->no_of_slots,
                 'vehicle_type' => $place->vehicle_type,
                 'status'       => $place->status,
@@ -209,7 +197,8 @@ class PlaceController extends Controller
             ], 404);
         }
 
-        $place->delete();
+        $place->status = 0;
+        $place->save();
 
         return response()->json([
             'status' => 'success',

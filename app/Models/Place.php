@@ -11,9 +11,7 @@ class Place extends Model
     protected $table = 'places';
     protected $fillable = [
         'place_name',
-        'city',
-        'state',
-        'country',
+        'address',
         'status',
         'no_of_slots',
         'operator_id',
@@ -22,4 +20,10 @@ class Place extends Model
     protected $casts = [
         'vehicle_type' => 'array',
     ];
+    public function setVehicleTypeAttribute($value)
+    {
+        $this->attributes['vehicle_type'] = json_encode(
+            array_map('intval', $value)
+        );
+    }
 }
