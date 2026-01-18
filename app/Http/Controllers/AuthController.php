@@ -16,6 +16,14 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $authUser = $request->user();
+
+
+        if (!$authUser) {
+            return response()->json([
+                'ack' => 'error',
+                'message' => 'Unauthorized. Token missing or invalid.'
+            ], 401);
+        }
         try {
             $request->validate([
                 'name'        => 'required',
@@ -66,7 +74,7 @@ class AuthController extends Controller
                     'mobile'     => $user->mobile,
                     'email'      => $user->email,
                     //'role'       => $user->role,
-                    'status'     => $user->status ? 'active' : 'inactive', // ✅ map here
+                    'status'     => $user->status ? 'active' : 'inactive',
                     'place_id'   => $user->place_id,
                     'created_at' => $user->created_at->toISOString(),
                     'updated_at' => $user->updated_at->toISOString(),
