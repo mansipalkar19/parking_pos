@@ -54,7 +54,7 @@ Route::prefix('admin')->group(function () {
 // })->name('userroles');
 
 Route::get('/userroles', [RoleWebController::class, 'index'])->name('userroles');
-Route::get('/placenames', [PlaceController::class, 'index'])->name('placenames');
+Route::get('/placenames', [PlaceWebController::class, 'index'])->name('placenames');
 Route::get('/vehicletype', [VehicleWebController::class, 'index'])->name('vehicletype');
 Route::get('/vendorlist', [VendorListWebController::class, 'index'])
     ->name('vendorlist');
